@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.upload import router as upload_router
+from routers.recommend import router as recommend_router
 import services.embedding as emb
 
 
@@ -11,7 +12,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="CineGroup API", version="0.3.0", lifespan=lifespan)
+app = FastAPI(title="Filmatch API", version="0.4.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,12 +22,13 @@ app.add_middleware(
 )
 
 app.include_router(upload_router)
+app.include_router(recommend_router)
 
 
 @app.get("/health")
 def health():
     return {
         "status": "ok",
-        "version": "0.3.0",
+        "version": "0.4.0",
         "model_loaded": emb._model is not None,
     }
