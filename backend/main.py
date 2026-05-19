@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routers.upload import router as upload_router
 
-app = FastAPI(title="CineGroup API")
+app = FastAPI(title="Filmatch API", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -10,6 +11,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(upload_router)
+
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "version": "0.2.0"}
