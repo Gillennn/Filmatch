@@ -1,8 +1,10 @@
 ﻿import asyncio
+import unicodedata
+import re
 import numpy as np
 from typing import List, Dict, Optional
 
-from services.tmdb import get_genre_map, fetch_candidates, search_movie
+from services.tmdb import get_genre_map, fetch_by_genres, fetch_popular, search_movie
 from services.embedding import encode_movie, encode_mood
 from services.engine import EngineRecommandationGroupe
 
@@ -10,6 +12,7 @@ MOOD_KEYWORDS: Dict[str, List[str]] = {
     "action": ["Action", "Thriller"],
     "comedie": ["Comedy"], "comédie": ["Comedy"],
     "drole": ["Comedy"], "drôle": ["Comedy"], "rire": ["Comedy"],
+    "legere": ["Comedy"], "légère": ["Comedy"],
     "horreur": ["Horror"], "peur": ["Horror"],
     "triste": ["Drama"], "melancolique": ["Drama"], "mélancolique": ["Drama"],
     "romantique": ["Romance"], "romance": ["Romance"], "amour": ["Romance"],
@@ -24,14 +27,25 @@ MOOD_KEYWORDS: Dict[str, List[str]] = {
     "guerre": ["War"], "histoire": ["History"],
     "musical": ["Music"], "western": ["Western"],
     "thriller": ["Thriller"], "suspense": ["Thriller", "Mystery"],
+    "feel-good": ["Comedy", "Romance"], "feel good": ["Comedy", "Romance"],
+    "popcorn": ["Action", "Adventure"], "detente": ["Comedy", "Family"],
+    "frissons": ["Horror", "Thriller"],
 }
 
 
+def _normalize(key: str) -> str:
+    key = key.lower()
+    key = unicodedata.normalize("NFD", key)
+    key = "".join(c for c in key if unicodedata.category(c) != "Mn")
+    key = re.sub(r"[^\w\s_]", "", key)
+    return re.sub(r"\s+", " ", key).strip()
+
+
 def extract_genres_from_mood(mood_text: str) -> List[str]:
-    mood_lower = mood_text.lower()
+    mood_norm = _normalize(mood_text)
     genres: set = set()
     for keyword, genre_list in MOOD_KEYWORDS.items():
-        if keyword in mood_lower:
+        if _normalize(keyword) in mood_norm:
             genres.update(genre_list)
     return list(genres)
 
@@ -68,12 +82,29 @@ async def build_profile_embeddings(
 async def run_pipeline(
     histories: List[List[Dict]],
     mood_text: str,
-    top_n: int = 20,
+    top_n: int = 5,
 ) -> List[Dict]:
-    seen_keys = {film["key"] for history in histories for film in history}
+    seen_norm = {
+        _normalize(film["key"])
+        for history in histories
+        for film in history
+    }
 
     genre_map = await get_genre_map()
-    candidates = await fetch_candidates(seen_keys, genre_map)
+    genres_mood = extract_genres_from_mood(mood_text)
+
+    genre_pool, popular_pool = await asyncio.gather(
+        fetch_by_genres(seen_norm, genre_map, genres_mood, max_pages=10),
+        fetch_popular(seen_norm, genre_map, max_pages=3),
+    )
+
+    if genre_pool:
+        all_candidates = genre_pool
+    else:
+        all_candidates = popular_pool
+
+    candidates = list(all_candidates.values())
+
     if not candidates:
         return []
 
@@ -85,7 +116,14 @@ async def run_pipeline(
         *[build_profile_embeddings(h, genre_map) for h in histories]
     )
 
-    engine = EngineRecommandationGroupe()
+    engine = EngineRecommandationGroupe(
+        omega_hist=0.15,
+        omega_mood=0.85,
+        omega_pen=0.2,
+        delta=0.35,
+        gamma_pop=0.55,
+    )
+
     profils_groupe = []
     for history, emb_catalogue in zip(histories, profile_embs_list):
         if emb_catalogue:
@@ -96,7 +134,6 @@ async def run_pipeline(
         return []
 
     v_mood = encode_mood(mood_text)
-    genres_mood = extract_genres_from_mood(mood_text)
 
     scored = []
     for c in candidates:
