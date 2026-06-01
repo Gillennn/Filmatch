@@ -193,3 +193,77 @@ body {
   transition: all .2s;
 }
 .remove-btn:hover { border-color: #f06a6a; color: #f06a6a; }
+
+.btn-letterboxd {
+  background: #00C030;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: .75rem 1.2rem;
+  font-size: .95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s;
+  text-align: left;
+}
+.btn-letterboxd:hover { background: #00a028; }
+
+.hint-small {
+  font-size: .78rem;
+  color: #666;
+  margin-top: -.3rem;
+}
+
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.mode-card {
+  background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 16px;
+  padding: 2rem 1rem; cursor: pointer; text-align: center;
+  transition: all .2s; color: #f0f0f0;
+}
+.mode-card:hover { border-color: #7c6af7; transform: translateY(-3px); }
+.mode-icon { display: block; font-size: 1rem; font-weight: 800; color: #7c6af7; margin-bottom: .5rem; }
+.mode-card h2 { font-size: 1.1rem; margin-bottom: .4rem; }
+.mode-card p { font-size: .8rem; color: #777; }
+
+.join-section { display: flex; flex-direction: column; gap: .6rem; }
+.join-row { display: flex; gap: .6rem; }
+.join-input { flex: 1; letter-spacing: .15em; font-weight: 700; text-transform: uppercase; }
+
+.session-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.session-code-block { display: flex; flex-direction: column; gap: .3rem; }
+.session-code {
+  font-size: 2.2rem; font-weight: 900; letter-spacing: .2em;
+  color: #7c6af7; font-family: monospace;
+}
+.user-count { font-size: .8rem; color: #4caf83; }
+.qr-code { border-radius: 8px; flex-shrink: 0; }
+
+.btn-copy {
+  background: #12121a; border: 1px solid #2a2a3a; border-radius: 10px;
+  color: #aaa; padding: .6rem 1rem; font-size: .85rem; cursor: pointer;
+  transition: all .2s; text-align: left;
+}
+.btn-copy:hover { border-color: #7c6af7; color: #f0f0f0; }
+
+.upload-success {
+  background: #0d2018; border: 1px solid #4caf83; border-radius: 10px;
+  color: #4caf83; padding: .8rem 1rem; font-weight: 600; font-size: .9rem;
+}
+
+.btn-secondary {
+  background: transparent; border: 1px solid #2a2a3a; border-radius: 12px;
+  color: #aaa; padding: .8rem; font-size: .9rem; cursor: pointer;
+  transition: all .2s; width: 100%;
+}
+.btn-secondary:hover { border-color: #7c6af7; color: #f0f0f0; }
+
+.back-btn-bottom {
+  background: none; border: none; color: #555; font-size: .85rem;
+  cursor: pointer; padding: .3rem; margin-top: .5rem;
+}
+.back-btn-bottom:hover { color: #aaa; }
+
+@media (max-width: 600px) {
+  .mode-grid { grid-template-columns: 1fr; }
+  .session-code { font-size: 1.8rem; }
+}
